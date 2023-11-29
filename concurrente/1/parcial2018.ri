@@ -1,0 +1,97 @@
+programa Diaz
+
+procesos
+  proceso juntarPapeles(ES papeles:numero)
+  comenzar
+    mientras HayPapelEnLaEsquina
+      tomarPapel
+      papeles:= papeles + 1
+  fin
+
+  proceso procesarEsquina(E avenida,calle,miCa,miAv:numero; ES papeles:numero)
+  comenzar
+    BloquearEsquina(avenida,calle)
+    Pos(avenida,calle)
+    juntarPapeles(papeles)
+    Pos(miCa,miAv)
+    DesbloquearEsquina(avenida,calle)
+  fin
+
+areas
+  areaCoordinador: AreaP(1,1,1,1)
+  areaCompartida: AreaPC(4,4,44,54)
+  areaR1: AreaP(1,4)
+  areaR2: AreaP(1,5)
+robots
+  robot papelero
+  variables
+    identificador:numero
+    cantIntentos, cantPapeles:numero
+    calle, avenida, miCa, miAv: numero
+    perdi: boolean
+  comenzar
+    miCa:= PosCa
+    miAv:= PosAv
+    RecibirMensaje(identificador, jefe)
+    RecibirMensaje(cantIntentos, jefe)
+    cantPapeles:= 0
+    mientras (cantIntentos > 0)
+      Random(avenida,4,44)
+      Random(calle,4,54)
+      procesarEsquina(avenida,calle,miCa,miAv,cantPapeles)
+      cantIntentos:= cantIntentos - 1
+    { Terminó sus intentos e informa al jefe cuántos papeles envió y quién es }
+    EnviarMensaje(identificador, jefe)
+    EnviarMensaje(cantPapeles, jefe)
+    { Debe determinar si perdió o no }
+    RecibirMensaje(perdi, jefe)
+    si perdi
+      RecibirMensaje(avenida, jefe)
+      RecibirMensaje(calle, jefe)
+      Pos(avenida, calle)
+  fin
+
+  robot coordinador
+  variables
+    aleatorio: numero
+    id1, cant1, cant2, idMax, cantMax: numero
+  comenzar
+    EnviarMensaje(1, r1)
+    EnviarMensaje(2, r2)
+    Random(aleatorio,4,9)
+    EnviarMensaje(aleatorio,r1)
+    Random(aleatorio,4,9)
+    EnviarMensaje(aleatorio,r2)
+    repetir 2
+      RecibirMensaje(id, *)
+      si (id = 1)
+        RecibirMensaje(cant1, r1)
+      sino
+        RecibirMensaje(cant2, r2)
+    si (cant1 > cant2)
+      Informar(2)
+      EnviarMensaje(F,r1)
+      EnviarMensaje(V,r2)
+      EnviarMensaje(4,r1)
+      EnviarMensaje(4,r1)
+    sino
+      Informar(1)
+      EnviarMensaje(F,r2)
+      EnviarMensaje(V,r1)
+      EnviarMensaje(4,r2)
+      EnviarMensaje(4,r2)
+
+  fin
+variables
+  r1,r2: papelero
+  jefe: coordinador
+comenzar
+  AsignarArea(r1, areaR1)
+  AsignarArea(r2, areaR2)
+  AsignarArea(jefe, areaCoordinador)
+  AsignarArea(r1, areaCompartida)
+  AsignarArea(r2, areaCompartida)
+  Iniciar(r1,1,4)
+  Iniciar(r2,1,5)
+  Iniciar(jefe,1,1)
+fin

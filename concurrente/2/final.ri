@@ -1,0 +1,224 @@
+programa finalDiaz;
+
+procesos
+    proceso juntarFlores(ES cantFlores:numero)
+    comenzar
+        mientras HayFlorEnLaEsquina
+            tomarFlor
+            cantFlores:= cantFlores + 1
+    fin
+    
+    proceso juntarPapeles(ES cantPapeles:numero)
+    comenzar
+        mientras HayPapelEnLaEsquina
+            tomarPapel
+            cantPapeles:= cantPapeles + 1
+    fin
+
+    proceso juntarTodo(ES cantPapeles:numero; ES cantFlores:numero)
+    comenzar
+        juntarFlores(cantFlores)
+        juntarPapeles(cantPapeles)
+    fin
+
+    proceso alturaChequeando(E altura, chequearDespuesDe:numero; ES cantFlores, cantPapeles: numero)
+    variables
+        parteUno,parteDos:numero
+    comenzar
+        parteUno:= chequearDespuesDe - 1
+        parteDos:= altura - chequearDespuesDe - 2
+        juntarTodo
+        repetir parteUno
+            mover
+            juntarTodo(cantFlores,cantPapeles)
+        BloquearEsquina(PosAv,PosCa + 1)
+        mover
+        juntarTodo(cantFlores,cantPapeles)
+        mover
+        LiberarEsquina(PosAv, PosCa - 1)
+        juntarTodo(cantFlores,cantPapeles)
+        repetir parteDos
+            mover
+            juntarTodo(cantFlores,cantPapeles)
+    fin    
+
+    proceso baseRecorrido(E base; ES cantFlores; ES cantPapeles)
+    comenzar
+        repetir base
+            mover
+            juntaTodo(cantFlores,cantPapeles)
+    fin
+
+    proceso hacerRectangulo(E base, altura:numero; ES cantFlores:numero; ES cantPapeles:numero)
+    variables
+        check:numero
+    comenzar
+        check:= 4
+        repetir 2
+            alturaChequeando(altura,check,cantFlores,cantPapeles)
+            derecha
+            baseRecorrido(base,cantFlores,cantPapeles)
+            derecha
+            check:= altura - 6
+    fin
+
+    proceso juntarFlor()
+    comenzar
+        si HayFlorEnLaEsquina
+                tomarFlor 
+    fin
+
+    proceso pasoCallejero()
+    comenzar
+        mover
+        juntarFlor
+    fin
+
+    proceso esquinaCompartidaC(E calle,av:numero)
+    comenzar
+        BloquearEsquina(calle,av)
+        mover
+        juntarFlor
+        mover
+        LiberarEsquina(calle,av)
+        juntarFlor
+    fin
+
+    proceso despositarFlores(ES cantFlores:numero)
+    variables
+        miCa,miAv:numero
+    comenzar
+        miCa:= PosCa
+        miAv:= PosAv
+        repetir cantFlores
+            BloquearEsquina(61,61)
+            Pos(61,61)
+            despositarFlor
+            Pos(miCa,miAv)
+            LiberarEsquina(61,61)
+    fin
+
+areas
+    areaJefe: areaP(1,1,1,1)
+    areaR1: areaPC(5,1,10,50)
+    areaR2: areaPC(15,1,20,50)
+    areaR3: areaPC(25,1,30,50)
+    areaRC1: areaP(1,5,4,5)
+    areaRC2: areaP(11,5,14,5)
+    areaRC3: areaP(21,5,24,5)
+    areaRC4: areaP(31,5,100,5)
+    areaDeposito: AreaPC(61,61,61,61)
+robots
+    robot roboRectangulo
+    variables
+        cantFlores,cantPapeles,altura:numero
+        id:numero
+        gane:boolean
+    comenzar
+        Random(altura,10,50)
+        RecibirMensaje(id,jefe)
+        hacerRectangulo(5,altura,cantFlores,cantPapeles)
+        EnviarMensaje(id,jefe)
+        EnviarMensaje(cantPapeles,jefe)
+        RecibirMensaje(gane,jefe)
+        si (gane)
+            depositarFlores(cantFlores)
+    fin
+
+    robot callejero
+    variables
+        ca,av:numero
+    comenzar
+        ca:=5
+        av:=5
+        derecha
+        juntarFlor
+        repetir 6
+            repetir 3
+                pasoCallejero
+            esquinaCompartidaC(ca,av)
+            ca:= ca + 5
+            av:= av + 5
+        repetir 69
+            pasoCallejero
+    fin
+
+    robot rJefe
+    variables
+        auxID,cant1,cant2,cant3,max1,max2: numero
+        resR1,resR2,resR3:boolean
+    comenzar
+        { Envía ids }
+        EnviarMensaje(1,robot1)
+        EnviarMensaje(2,robot2)
+        EnviarMensaje(3,robot3)
+        max1:= 0
+        max2:= 0
+        resR1:=F
+        resR2:=F
+        resR3:=F
+        repetir 3
+            RecibirMensaje(auxID,*)
+            si(auxID = 1)
+                RecibirMensaje(cant1, robot1)
+            sino
+                si(auxID = 2)
+                    RecibirMensaje(cant2, robot2)
+                sino
+                    RecibirMensaje(cant3,robot3)
+        
+        si (cant1 > cant2)
+            resR1:=V
+            si (cant1 > cant3)
+                {el 1 es el mayor}
+                si (cant2 > cant3)
+                    {el dos es el segundo mayor}
+                    resR2:=V
+                sino
+                    {el tres es el segundo mayor} 
+                    resR3:=V
+            sino
+                { 3 es el mayor y le sigue 1 }
+                resR3:=V
+        sino
+            resR2:= V
+            si (cant2 > cant3)
+                { cant2 es el mayor }
+                si(cant1 > cant3)
+                    {1 y luego 3}
+                    resR1:=V
+                sino
+                    {3 y luego 1}
+                    resR3:=V
+            sino
+                resR3:=V
+        EnviarMensaje(resR1,robot1)
+        EnviarMensaje(resR2,robot2)
+        EnviarMensaje(resR3,robot3)
+    fin
+
+variables
+    robot1,robot2,robot3: roboRectangulo
+    rC: callejero
+    jefe: rJefe
+comenzar
+    AsignarArea(robot1,areaR1)
+    AsignarArea(robot2,areaR2)
+    AsignarArea(robot3,areaR3)
+    AsignarArea(rC,areaR1)
+    AsignarArea(rC,areaR2)
+    AsignarArea(rC,areaR3)
+    AsignarArea(rC,areaRC1)
+    AsignarArea(rC,areaRC2)
+    AsignarArea(rC,areaRC3)
+    AsignarArea(rC,areaRC4)
+    AsignarArea(robot1,areaDeposito)
+    AsignarArea(robot2,areaDeposito)
+    AsignarArea(robot3,areaDeposito)
+    AsignarArea(jefe,areaJefe)
+    Iniciar(robot1,5,1)
+    Iniciar(robot2,15,1)
+    Iniciar(robot3,25,1)
+    Iniciar(rC,5,1)
+    Iniciar(jefe,1,1)
+fin
